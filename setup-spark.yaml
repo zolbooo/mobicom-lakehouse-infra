@@ -50,3 +50,42 @@
         name: docker
         state: present
 - import_playbook: setup-swarm-cluster.yaml
+- name: Setup Spark
+  hosts: spark_main_node
+  tasks:
+    - name: Get primary node ID
+      become: true
+      command: !unsafe docker node ls -f role=manager --format {{.ID}}
+      register: primary_node_id
+    - name: Set primary node Spark role
+      become: true
+      docker_node:
+        hostname: "{{ primary_node_id.stdout }}"
+        labels:
+          spark-role: master
+    - name: Get worker node IDs
+      become: true
+      # See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
+      command: !unsafe docker node ls -f role=worker --format {{.ID}}
+      register: worker_node_ids
+    - name: Set worker node Spark role
+      become: true
+      docker_node:
+        hostname: "{{ item }}"
+        labels:
+          spark-role: worker
+      with_items: "{{ worker_node_ids.stdout_lines }}"
+    - name: Create directory for Spark configuration
+      become: true
+      file:
+        path: /data/spark
+        state: directory
+        recurse: true
+    - name: Copy Spark stack config
+      become: true
+      copy:
+        src: spark-stack.yaml
+        dest: /data/spark
+    - name: Start Spark stack
+      become: true
+      command: docker stack deploy -c /data/spark/spark-stack.yaml spark
