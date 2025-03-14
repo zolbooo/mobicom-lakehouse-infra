@@ -1,0 +1,27 @@
+---
+- name: Initialize Docker Swarm manager node
+  hosts: spark_main_node
+  tasks:
+    - name: Initialize Docker Swarm
+      become: true
+      docker_swarm:
+        state: present
+    - name: Get Swarm join token
+      become: true
+      command: docker swarm join-token worker -q
+      register: join_command
+    - name: Set Swarm join token
+      set_fact:
+        swarm_join_token: "{{ join_command.stdout }}"
+    - name: Get main node address
+      shell: "ip -br addr show dev {{ swarm_interface }} | awk '{print $3}' | cut -d/ -f1"
+      register: main_node_address
+    - name: Set main node address
+      set_fact:
+        swarm_interface_ip: "{{ main_node_address.stdout }}"
+- name: Initialize Docker Swarm worker nodes
+  hosts: spark_worker_nodes
+  tasks:
+    - name: Join Docker Swarm
+      become: true
+      command: docker swarm join --token {{ hostvars['spark_main_node']['swarm_join_token'] }} {{ hostvars['spark_main_node']['swarm_interface_ip'] }}:2377

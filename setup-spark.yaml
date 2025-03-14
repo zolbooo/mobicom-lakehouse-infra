@@ -11,3 +11,14 @@
       include_role:
         name: rhel-install-docker
       when: docker_compose_check.rc != 0
+    - name: Install pip
+      become: true
+      dnf:
+        name: python3-pip
+        state: present
+    - name: Install docker Python library
+      become: true
+      pip:
+        name: docker
+        state: present
+- import_playbook: setup-swarm-cluster.yaml
