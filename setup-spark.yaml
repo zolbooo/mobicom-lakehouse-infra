@@ -78,7 +78,7 @@
     - name: Create directory for Spark configuration
       become: true
       file:
-        path: /data/spark
+        path: /opt/spark
         state: directory
         recurse: true
     - name: Copy Spark stack config
@@ -88,4 +88,4 @@
         dest: /data/spark
     - name: Start Spark stack
       become: true
-      command: docker stack deploy -c /data/spark/spark-stack.yaml spark
+      command: docker stack deploy -c /opt/spark/spark-stack.yaml spark
