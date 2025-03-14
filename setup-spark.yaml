@@ -11,6 +11,12 @@
       include_role:
         name: rhel-install-docker
       when: docker_compose_check.rc != 0
+    - name: Start Docker service
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: yes
     - name: Install pip
       become: true
       dnf:
