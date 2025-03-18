@@ -1,0 +1,132 @@
+version: "3.8"
+
+x-logging: &default-logging
+  options:
+    max-size: "1024m"
+    max-file: "3"
+  driver: json-file
+
+x-common: &common
+  image: "122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest"
+  logging: *default-logging
+  environment: &common-env
+    SPARK_NO_DAEMONIZE: "true"
+    PYTHONUNBUFFERED: 1
+  networks:
+    mobi-network:
+      aliases:
+        - spark-yarn-master
+  cap_add:
+    - NET_ADMIN
+    - NET_RAW
+  devices:
+    - "/dev/net/tun:/dev/net/tun"
+
+services:
+  spark-yarn-master:
+    <<: *common
+    # Override the network alias specifically for the master service
+    networks:
+      mobi-network:
+        aliases:
+          - spark-yarn-master
+    environment:
+      <<: *common-env
+      YARN_BIND_HOST: 0.0.0.0
+      YARN_RESOURCEMANAGER_BIND_HOST: 0.0.0.0
+    entrypoint: ["./entrypoint.sh", "master"]
+    ports:
+      - target: 8080
+        published: 9090
+        protocol: tcp
+        mode: host
+      - target: 9870
+        published: 9870
+        protocol: tcp
+        mode: host
+      - target: 8088
+        published: 8088
+        protocol: tcp
+        mode: host
+      - target: 7077
+        published: 7077
+        protocol: tcp
+        mode: host
+      - target: 8032
+        published: 8032
+        protocol: tcp
+        mode: host
+      - target: 8030
+        published: 8030
+        protocol: tcp
+        mode: host
+      - target: 8031
+        published: 8031
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.spark-role==master
+      resources:
+        limits:
+          cpus: "16"
+          memory: 32G
+        reservations:
+          cpus: "16"
+          memory: 16G
+
+  spark-yarn-worker:
+    <<: *common
+    networks:
+      mobi-network:
+        aliases:
+          - spark-yarn-worker
+    environment:
+      <<: *common-env
+    entrypoint: ["./entrypoint.sh", "worker"]
+    depends_on:
+      - spark-yarn-master
+    deploy:
+      placement:
+        constraints:
+          - node.labels.spark-role==worker
+      replicas: 2
+      resources:
+        limits:
+          cpus: "7"
+          memory: 15G
+        reservations:
+          cpus: "6"
+          memory: 8G
+
+  yarn-history-server:
+    <<: *common
+    networks:
+      mobi-network:
+        aliases:
+          - yarn-history-server
+    environment:
+      <<: *common-env
+    entrypoint: ["./entrypoint.sh", "history"]
+    depends_on:
+      - spark-yarn-master
+    ports:
+      - "18080:18080"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.spark-role==master
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 1G
+        reservations:
+          cpus: "0.1"
+          memory: 512M
+
+networks:
+  mobi-network:
+    driver: overlay
+    external: true
+    attachable: true

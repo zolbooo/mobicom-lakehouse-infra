@@ -1,0 +1,26 @@
+---
+- name: Initialize Docker Swarm manager node
+  hosts: spark_main_node
+  gather_facts: true
+  tasks:
+    - name: Initialize Docker Swarm
+      become: true
+      docker_swarm:
+        advertise_addr: "{{ ansible_facts[swarm_interface]['ipv4']['address'] }}"
+        state: present
+      register: swarm_manager
+    - name: Set Swarm join token
+      set_fact:
+        swarm_join_token: "{{ swarm_manager.swarm_facts.JoinTokens.Worker }}"
+- name: Initialize Docker Swarm worker nodes
+  hosts: spark_worker_nodes
+  gather_facts: false
+  tasks:
+    - name: Join Docker Swarm
+      become: true
+      docker_swarm:
+        join_token: "{{ hostvars[groups['spark_main_node'][0]]['swarm_join_token'] }}"
+        advertise_addr: "{{ swarm_interface }}"
+        # Append port number to remote address using "product | join | list", see https://www.itix.fr/blog/ansible-add-prefix-suffix-to-list/
+        remote_addrs: "{{ groups['spark_main_node'] | map('extract', hostvars, ['ansible_facts', swarm_interface, 'ipv4', 'address']) | list | product([':2377']) | map('join') | list }}"
+        state: join

@@ -1,0 +1,91 @@
+---
+- name: Install Docker (if required)
+  hosts: spark_nodes
+  tasks:
+    - name: Check if Docker Compose is available
+      command: docker compose version
+      register: docker_compose_check
+      failed_when: false
+      changed_when: false
+    - name: Install Docker
+      include_role:
+        name: rhel-install-docker
+      when: docker_compose_check.rc != 0
+    - name: Install ECR credentials helper
+      become: true
+      vars:
+        version: 0.9.1
+      get_url:
+        url: https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/{{ version }}/linux-amd64/docker-credential-ecr-login
+        dest: /usr/local/bin/docker-credential-ecr-login
+        mode: "0755"
+        checksum: sha256:c0054f2635b2f01b00f7bf6f88023ffe7fded15c533a85a493037607135eebac
+    - name: Create directory for Docker configuration
+      become: true
+      file:
+        path: /root/.docker
+        state: directory
+    - name: Setup Docker configuration
+      become: true
+      copy:
+        content: |
+          {
+            "credsStore": "ecr-login"
+          }
+        dest: /root/.docker/config.json
+    - name: Start Docker service
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Install pip
+      become: true
+      dnf:
+        name: python3-pip
+        state: present
+    - name: Install docker Python library
+      become: true
+      pip:
+        name: docker
+        state: present
+- import_playbook: setup-swarm-cluster.yaml
+- name: Setup Spark
+  hosts: spark_main_node
+  tasks:
+    - name: Get primary node ID
+      become: true
+      command: !unsafe docker node ls -f role=manager --format {{.ID}}
+      register: primary_node_id
+    - name: Set primary node Spark role
+      become: true
+      docker_node:
+        hostname: "{{ primary_node_id.stdout }}"
+        labels:
+          spark-role: master
+    - name: Get worker node IDs
+      become: true
+      # See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
+      command: !unsafe docker node ls -f role=worker --format {{.ID}}
+      register: worker_node_ids
+    - name: Set worker node Spark role
+      become: true
+      docker_node:
+        hostname: "{{ item }}"
+        labels:
+          spark-role: worker
+      with_items: "{{ worker_node_ids.stdout_lines }}"
+    - name: Create directory for Spark configuration
+      become: true
+      file:
+        path: /opt/spark
+        state: directory
+        recurse: true
+    - name: Copy Spark stack config
+      become: true
+      copy:
+        src: spark-stack.yaml
+        dest: /opt/spark
+    - name: Start Spark stack
+      become: true
+      command: docker stack deploy -c /opt/spark/spark-stack.yaml spark
