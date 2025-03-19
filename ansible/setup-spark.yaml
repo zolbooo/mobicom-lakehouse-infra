@@ -9,7 +9,7 @@
       changed_when: false
     - name: Install Docker
       include_role:
-        name: rhel-install-docker
+        name: install-docker
       when: docker_compose_check.rc != 0
     - name: Install ECR credentials helper
       become: true

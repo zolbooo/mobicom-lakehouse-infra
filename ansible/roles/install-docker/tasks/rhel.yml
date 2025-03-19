@@ -1,4 +1,3 @@
----
 # See: https://docs.docker.com/engine/install/rhel/
 - name: Install dnf-plugins-core package
   become: true
