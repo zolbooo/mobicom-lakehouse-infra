@@ -10,7 +10,7 @@ all:
             ec2-47-128-66-227.ap-southeast-1.compute.amazonaws.com:
               primary_interface: eth0
               wg_port: 51820
-              wg_address: '10.66.66.1/24'
+              wg_address: "10.66.66.1/24"
               peers:
                 - name: oleg
                   public_key: 8IBdTYF5SCDAL+AWIBEerDgyDWDifobKj7ey0dedoQY=
