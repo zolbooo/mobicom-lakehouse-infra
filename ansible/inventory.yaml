@@ -3,19 +3,6 @@ all:
     ansible_user: ec2-user
     ansible_python_interpreter: /usr/bin/python3
   children:
-    dmz:
-      children:
-        wg_bastion:
-          hosts:
-            ec2-47-128-66-227.ap-southeast-1.compute.amazonaws.com:
-              primary_interface: eth0
-              wg_port: 51820
-              wg_address: "10.66.66.1/24"
-              peers:
-                - name: oleg
-                  public_key: 8IBdTYF5SCDAL+AWIBEerDgyDWDifobKj7ey0dedoQY=
-                  ip_address: "10.66.66.2"
-                  psk: kKLTBI3EH6fiOXCR3/OcwDUj58mUH4S90J6Oo69oEjY=
     spark_nodes:
       vars:
         swarm_interface: eth0
