@@ -33,7 +33,7 @@
         mode: u+x
     - name: Download Atlas dependencies
       become: true
-      command: ./atlas/dev-support/atlas-docker/download-archives.sh
+      shell: ./atlas/dev-support/atlas-docker/download-archives.sh
     - name: Ensure .m2 directory exists
       become: true
       file:
