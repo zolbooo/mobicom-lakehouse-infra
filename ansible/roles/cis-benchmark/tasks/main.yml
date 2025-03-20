@@ -32,4 +32,6 @@
 - name: Run OpenSCAP
   become: true
   command: oscap xccdf eval --remediate --profile xccdf_org.ssgproject.content_profile_cis --report cis-report.html /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+  args:
+    creates: cis-report.html
   ignore_errors: true
