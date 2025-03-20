@@ -1,0 +1,52 @@
+---
+- name: Setup Atlas instance
+  hosts: atlas_nodes
+  tasks:
+    - include_role:
+        name: cis-benchmark
+    - include_role:
+        name: install-docker
+    - name: Ensure docker service is running
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Install Git
+      become: true
+      package:
+        name: git
+        state: present
+    - name: Clone Atlas repository
+      git:
+        repo: https://github.com/apache/atlas.git
+        dest: atlas
+    - name: Ensure execute permissions on download-archives.sh script
+      file:
+        path: atlas/dev-support/atlas-docker/download-archives.sh
+        mode: u+x
+    - name: Download Atlas dependencies
+      become: true
+      command: ./atlas/dev-support/atlas-docker/download-archives.sh
+    - name: Ensure .m2 directory exists
+      become: true
+      file:
+        mode: "0777"
+        path: /root/.m2
+        state: directory
+    - name: Bump hadoop version
+      become: true
+      lineinfile:
+        path: atlas/dev-support/atlas-docker/.env
+        regexp: ^HADOOP_VERSION=
+        line: HADOOP_VERSION=3.3.6
+    - name: Run Atlas build
+      become: true
+      shell: docker compose -f docker-compose.atlas-base.yml -f docker-compose.atlas-build.yml up
+      args:
+        chdir: atlas/dev-support/atlas-docker/
+    - name: Run Atlas server
+      become: true
+      shell: docker compose -f docker-compose.atlas-base.yml -f docker-compose.atlas.yml -f docker-compose.atlas-hadoop.yml -f docker-compose.atlas-hbase.yml -f docker-compose.atlas-kafka.yml -f docker-compose.atlas-hive.yml up -d
+      args:
+        chdir: atlas/dev-support/atlas-docker/

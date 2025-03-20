@@ -2,6 +2,8 @@ all:
   vars:
     ansible_user: ec2-user
     ansible_python_interpreter: /usr/bin/python3
+    ansible_become_password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.sudo.password') }}"
+    root_password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.root.password') }}"
   children:
     spark_nodes:
       vars:
@@ -14,3 +16,6 @@ all:
           hosts:
             ec2-18-143-149-189.ap-southeast-1.compute.amazonaws.com:
             ec2-54-255-199-16.ap-southeast-1.compute.amazonaws.com:
+    atlas_nodes:
+      hosts:
+        ec2-52-221-229-207.ap-southeast-1.compute.amazonaws.com:
