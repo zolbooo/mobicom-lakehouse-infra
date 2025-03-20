@@ -21,6 +21,12 @@
       git:
         repo: https://github.com/apache/atlas.git
         dest: atlas
+    - name: Bump hadoop version
+      become: true
+      lineinfile:
+        path: atlas/dev-support/atlas-docker/.env
+        regexp: ^HADOOP_VERSION=
+        line: HADOOP_VERSION=3.3.6
     - name: Ensure execute permissions on download-archives.sh script
       file:
         path: atlas/dev-support/atlas-docker/download-archives.sh
@@ -34,12 +40,6 @@
         mode: "0777"
         path: /root/.m2
         state: directory
-    - name: Bump hadoop version
-      become: true
-      lineinfile:
-        path: atlas/dev-support/atlas-docker/.env
-        regexp: ^HADOOP_VERSION=
-        line: HADOOP_VERSION=3.3.6
     - name: Run Atlas build
       become: true
       shell: docker compose -f docker-compose.atlas-base.yml -f docker-compose.atlas-build.yml up
