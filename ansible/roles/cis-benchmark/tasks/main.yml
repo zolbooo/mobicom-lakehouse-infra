@@ -14,7 +14,7 @@
     name: "{{ ansible_user }}"
     user: "{{ ansible_user }}"
     commands: ALL
-- name: Restrict SSH /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+- name: Allow only ec2-user to connect via SSH
   become: true
   lineinfile:
     path: /etc/ssh/sshd_config
