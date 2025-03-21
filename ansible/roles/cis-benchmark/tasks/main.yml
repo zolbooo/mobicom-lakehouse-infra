@@ -8,12 +8,12 @@
   user:
     name: root
     password: "{{ root_password | password_hash('sha512', lookup('community.general.random_string', length=16, special=false)) }}"
-- name: Add user to sudoers
+- name: Add user to wheel group
   become: true
-  community.general.sudoers:
+  user:
     name: "{{ ansible_user }}"
-    user: "{{ ansible_user }}"
-    commands: ALL
+    groups: wheel
+    append: true
 - name: Allow only ec2-user to connect via SSH
   become: true
   lineinfile:
