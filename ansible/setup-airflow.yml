@@ -1,0 +1,44 @@
+---
+- name: Setup Airflow nodes
+  hosts: airflow_nodes
+  tasks:
+    - include_role:
+        name: cis-benchmark
+    - include_role:
+        name: install-docker
+    - name: Install git
+      become: true
+      package:
+        name: git
+        state: present
+    - name: Clone lakehouse repository
+      become: true
+      block:
+        - name: Prepare directory for project
+          file:
+            path: /opt
+            state: directory
+        - name: Copy deployment key
+          copy:
+            # See: https://github.com/ansible/ansible/issues/30829#issuecomment-334192427
+            content: "{{ lookup('file', 'files/deploy-key') + '\n' }}"
+            dest: /tmp/lakehouse-deployment-key
+            mode: 0600
+        - name: Clone repository
+          git:
+            repo: git@github.com:erdenebayrd/mobicom.git
+            accept_hostkey: yes
+            key_file: /tmp/lakehouse-deployment-key
+            dest: /opt/mobicom
+        - name: Remove deployment key
+          shell: shred -u /tmp/lakehouse-deployment-key
+    - name: Configure dotenv file
+      become: true
+      template:
+        src: files/airflow.env.j2
+        dest: /opt/mobicom/.env
+    - name: Start Airflow
+      become: true
+      command: docker compose up -d --build
+      args:
+        chdir: /opt/mobicom/.docker/airflow

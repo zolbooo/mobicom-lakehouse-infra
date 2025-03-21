@@ -19,3 +19,6 @@ all:
     atlas_nodes:
       hosts:
         ec2-52-221-229-207.ap-southeast-1.compute.amazonaws.com:
+    airflow_nodes:
+      hosts:
+        ec2-18-143-175-66.ap-southeast-1.compute.amazonaws.com:
