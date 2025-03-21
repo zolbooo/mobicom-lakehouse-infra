@@ -6,6 +6,12 @@
         name: cis-benchmark
     - include_role:
         name: install-docker
+    - name: Ensure docker service is running
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: yes
     - name: Install git
       become: true
       package:
