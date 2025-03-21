@@ -49,7 +49,7 @@
       pip:
         name: docker
         state: present
-- import_playbook: setup-swarm-cluster.yaml
+- import_playbook: playbooks/setup-swarm-cluster.yaml
 - name: Setup Spark
   hosts: spark_main_node
   tasks:
