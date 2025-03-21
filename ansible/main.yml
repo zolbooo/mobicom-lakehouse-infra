@@ -1,0 +1,4 @@
+---
+- import_playbook: setup-spark.yml
+- import_playbook: setup-atlas-instance.yml
+- import_playbook: setup-airflow.yml

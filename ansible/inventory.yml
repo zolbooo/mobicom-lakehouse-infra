@@ -11,14 +11,14 @@ all:
       children:
         spark_main_node:
           hosts:
-            ec2-54-179-146-70.ap-southeast-1.compute.amazonaws.com:
+            ec2-54-179-105-116.ap-southeast-1.compute.amazonaws.com:
         spark_worker_nodes:
           hosts:
-            ec2-18-143-149-189.ap-southeast-1.compute.amazonaws.com:
-            ec2-54-255-199-16.ap-southeast-1.compute.amazonaws.com:
+            ec2-13-229-226-172.ap-southeast-1.compute.amazonaws.com:
+            ec2-13-212-91-29.ap-southeast-1.compute.amazonaws.com:
     atlas_nodes:
       hosts:
-        ec2-52-221-229-207.ap-southeast-1.compute.amazonaws.com:
+        ec2-47-128-80-190.ap-southeast-1.compute.amazonaws.com:
     airflow_nodes:
       hosts:
-        ec2-18-143-175-66.ap-southeast-1.compute.amazonaws.com:
+        ec2-47-128-152-214.ap-southeast-1.compute.amazonaws.com:
