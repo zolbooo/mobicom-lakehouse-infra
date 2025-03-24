@@ -61,13 +61,12 @@
       pip:
         name: docker
         state: present
-- import_playbook: playbooks/setup-swarm-cluster.yaml
-- name: Pull Spark image
-  hosts: spark_nodes
-  tasks:
     - name: Pull Spark image
       become: true
-      command: docker pull 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
+      docker_image:
+        name: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
+        source: pull
+- import_playbook: playbooks/setup-swarm-cluster.yaml
 - name: Setup Spark
   hosts: spark_main_node
   tasks:
