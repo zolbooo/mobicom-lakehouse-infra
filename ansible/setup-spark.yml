@@ -24,11 +24,14 @@
       become: true
       vars:
         version: 0.9.1
+        checksums:
+          arm64: sha256:a10012acfe5e28d7aed18f06bec4aa2a13fb3d9765898c36ef31136b24bd56e9
+          amd64: sha256:c0054f2635b2f01b00f7bf6f88023ffe7fded15c533a85a493037607135eebac
       get_url:
         url: https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/{{ version }}/linux-{{ 'arm64' if ansible_facts.architecture == 'aarch64' else 'amd64' }}/docker-credential-ecr-login
         dest: /usr/bin/docker-credential-ecr-login
         mode: "0755"
-        checksum: sha256:c0054f2635b2f01b00f7bf6f88023ffe7fded15c533a85a493037607135eebac
+        checksum: "{{ checksums['arm64' if ansible_facts.architecture == 'aarch64' else 'amd64'] }}"
     - name: Create directory for Docker configuration
       become: true
       file:
