@@ -1,7 +1,16 @@
 ---
-- name: Install Docker (if required)
+- name: Configure nodes
   hosts: spark_nodes
   tasks:
+    - include_role:
+        name: cis-benchmark
+    - name: Mount /dev/sdb into /opt/app
+      become: true
+      mount:
+        path: /opt/app
+        src: /dev/sdb
+        fstype: ext4
+        state: present
     - name: Check if Docker Compose is available
       command: docker compose version
       register: docker_compose_check
@@ -78,14 +87,14 @@
     - name: Create directory for Spark configuration
       become: true
       file:
-        path: /opt/spark
+        path: /opt/app/spark
         state: directory
         recurse: true
     - name: Copy Spark stack config
       become: true
       copy:
         src: spark-stack.yaml
-        dest: /opt/spark
+        dest: /opt/app/spark
     - name: Start Spark stack
       become: true
-      command: docker stack deploy -c /opt/spark/spark-stack.yaml spark
+      command: docker stack deploy -c /opt/app/spark/spark-stack.yaml spark
