@@ -26,9 +26,7 @@
         path: atlas/dev-support/atlas-docker/download-archives.sh
         mode: u+x
     - name: Download Atlas dependencies
-      become: true
       shell: ./download-archives.sh
-      register: download_archives
       args:
         chdir: atlas/dev-support/atlas-docker/
     - name: Ensure .m2 directory exists
