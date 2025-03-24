@@ -3,5 +3,5 @@
   register: cis_benchmark_report_check
   failed_when: false
   changed_when: false
-- include_tasks: job.yml
+- include_tasks: rhel9.yml
   when: cis_benchmark_report_check.rc != 0
