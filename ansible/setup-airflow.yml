@@ -1,9 +1,14 @@
 ---
+- name: Get Spark primary node address
+  hosts: spark_main_node
+  gather_facts: true
+  tasks:
+    - name: Set Spark primary node address
+      set_fact:
+        spark_main_node_address: "{{ ansible_facts[network_interface]['ipv4']['address'] }}"
 - name: Setup Airflow nodes
   hosts: airflow_nodes
   tasks:
-    - debug:
-        var: airflow.password
     - include_role:
         name: cis-benchmark
     - include_role:
@@ -13,7 +18,16 @@
       service:
         name: docker
         state: started
-        enabled: yes
+        enabled: true
+    - name: Add Spark primary node to /etc/hosts
+      become: true
+      vars:
+        spark_main_node_address: "{{ hostvars[groups['spark_main_node'][0]]['spark_main_node_address'] }}"
+      lineinfile:
+        dest: /etc/hosts
+        regexp: ".* spark.internal$"
+        line: "{{ spark_main_node_address }} spark.internal"
+        state: present
     - name: Install git
       become: true
       package:

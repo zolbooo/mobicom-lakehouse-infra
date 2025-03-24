@@ -6,7 +6,7 @@
     - name: Initialize Docker Swarm
       become: true
       docker_swarm:
-        advertise_addr: "{{ ansible_facts[swarm_interface]['ipv4']['address'] }}"
+        advertise_addr: "{{ ansible_facts[network_interface]['ipv4']['address'] }}"
         state: present
       register: swarm_manager
     - name: Set Swarm join token
@@ -20,7 +20,7 @@
       become: true
       docker_swarm:
         join_token: "{{ hostvars[groups['spark_main_node'][0]]['swarm_join_token'] }}"
-        advertise_addr: "{{ swarm_interface }}"
+        advertise_addr: "{{ network_interface }}"
         # Append port number to remote address using "product | join | list", see https://www.itix.fr/blog/ansible-add-prefix-suffix-to-list/
-        remote_addrs: "{{ groups['spark_main_node'] | map('extract', hostvars, ['ansible_facts', swarm_interface, 'ipv4', 'address']) | list | product([':2377']) | map('join') | list }}"
+        remote_addrs: "{{ groups['spark_main_node'] | map('extract', hostvars, ['ansible_facts', network_interface, 'ipv4', 'address']) | list | product([':2377']) | map('join') | list }}"
         state: join

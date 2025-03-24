@@ -7,7 +7,7 @@ all:
   children:
     spark_nodes:
       vars:
-        swarm_interface: eth0
+        network_interface: eth0
         spark_image: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
       children:
         spark_main_node:
