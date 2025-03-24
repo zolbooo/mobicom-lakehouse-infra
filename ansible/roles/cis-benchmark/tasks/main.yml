@@ -14,6 +14,8 @@
     name: "{{ ansible_user }}"
     groups: wheel
     append: true
+- name: Reconnect after changing user's group
+  meta: reset_connection
 - name: Allow only ec2-user to connect via SSH
   become: true
   lineinfile:
