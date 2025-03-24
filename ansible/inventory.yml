@@ -21,5 +21,9 @@ all:
       hosts:
         ec2-47-128-80-190.ap-southeast-1.compute.amazonaws.com:
     airflow_nodes:
+      vars:
+        airflow:
+          username: airflow
+          password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.airflow.password') }}"
       hosts:
-        ec2-47-128-152-214.ap-southeast-1.compute.amazonaws.com:
+        ip-10-0-4-133.ap-southeast-1.compute.internal:

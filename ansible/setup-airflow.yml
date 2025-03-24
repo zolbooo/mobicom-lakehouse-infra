@@ -2,6 +2,8 @@
 - name: Setup Airflow nodes
   hosts: airflow_nodes
   tasks:
+    - debug:
+        var: airflow.password
     - include_role:
         name: cis-benchmark
     - include_role:
@@ -33,8 +35,10 @@
         - name: Clone repository
           git:
             repo: git@github.com:erdenebayrd/mobicom.git
-            accept_hostkey: yes
             key_file: /tmp/lakehouse-deployment-key
+            accept_hostkey: true
+            single_branch: true
+            version: vpc-deployment
             dest: /opt/mobicom
         - name: Remove deployment key
           shell: shred -u /tmp/lakehouse-deployment-key
@@ -43,8 +47,13 @@
       template:
         src: files/airflow.env.j2
         dest: /opt/mobicom/.env
+    - name: Set up logs directory
+      become: true
+      file:
+        path: /opt/mobicom/.docker/airflow/logs
+        mode: "0777"
+        state: directory
     - name: Start Airflow
       become: true
-      command: docker compose up -d --build
-      args:
-        chdir: /opt/mobicom/.docker/airflow
+      community.docker.docker_compose_v2:
+        project_src: /opt/mobicom/.docker/airflow
