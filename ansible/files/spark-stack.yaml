@@ -12,10 +12,6 @@ x-common: &common
   environment: &common-env
     SPARK_NO_DAEMONIZE: "true"
     PYTHONUNBUFFERED: 1
-  networks:
-    mobi-network:
-      aliases:
-        - spark-yarn-master
   cap_add:
     - NET_ADMIN
     - NET_RAW
@@ -25,11 +21,6 @@ x-common: &common
 services:
   spark-yarn-master:
     <<: *common
-    # Override the network alias specifically for the master service
-    networks:
-      mobi-network:
-        aliases:
-          - spark-yarn-master
     environment:
       <<: *common-env
       YARN_BIND_HOST: 0.0.0.0
@@ -78,10 +69,6 @@ services:
 
   spark-yarn-worker:
     <<: *common
-    networks:
-      mobi-network:
-        aliases:
-          - spark-yarn-worker
     environment:
       <<: *common-env
     entrypoint: ["./entrypoint.sh", "worker"]
@@ -102,10 +89,6 @@ services:
 
   yarn-history-server:
     <<: *common
-    networks:
-      mobi-network:
-        aliases:
-          - yarn-history-server
     environment:
       <<: *common-env
     entrypoint: ["./entrypoint.sh", "history"]
@@ -124,9 +107,3 @@ services:
         reservations:
           cpus: "0.1"
           memory: 512M
-
-networks:
-  mobi-network:
-    driver: overlay
-    external: true
-    attachable: true
