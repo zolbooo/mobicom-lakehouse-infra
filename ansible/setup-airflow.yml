@@ -13,12 +13,6 @@
         name: cis-benchmark
     - include_role:
         name: install-docker
-    - name: Ensure docker service is running
-      become: true
-      service:
-        name: docker
-        state: started
-        enabled: true
     - name: Add Spark primary node to /etc/hosts
       become: true
       vars:

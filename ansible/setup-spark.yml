@@ -38,12 +38,6 @@
             "credsStore": "ecr-login"
           }
         dest: /root/.docker/config.json
-    - name: Start Docker service
-      become: true
-      service:
-        name: docker
-        state: started
-        enabled: yes
     - name: Install pip
       become: true
       dnf:

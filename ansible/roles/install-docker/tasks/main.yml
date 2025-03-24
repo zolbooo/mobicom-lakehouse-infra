@@ -9,4 +9,20 @@
     - name: Install Docker on RHEL
       import_tasks: rhel.yml
       when: ansible_facts['os_family']|lower == 'redhat'
+    - name: Install Docker
+      become: true
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+    - name: Ensure docker service is running
+      become: true
+      service:
+        name: docker
+        state: started
+        enabled: true
   when: docker_compose_check.rc != 0
