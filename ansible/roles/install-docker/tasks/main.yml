@@ -1,4 +1,12 @@
 ---
-- name: Install Docker on RHEL
-  import_tasks: rhel.yml
-  when: ansible_facts['os_family']|lower == 'redhat'
+- name: Check if Docker Compose is available
+  command: docker compose version
+  register: docker_compose_check
+  failed_when: false
+  changed_when: false
+- name: Proceed with Docker installation
+  block:
+    - name: Install Docker on RHEL
+      import_tasks: rhel.yml
+      when: ansible_facts['os_family']|lower == 'redhat'
+  when: docker_compose_check.rc != 0
