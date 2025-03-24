@@ -4,10 +4,10 @@ all:
     ansible_python_interpreter: /usr/bin/python3
     ansible_become_password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.sudo.password') }}"
     root_password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.root.password') }}"
+    network_interface: eth0
   children:
     spark_nodes:
       vars:
-        network_interface: eth0
         spark_image: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
       children:
         spark_main_node:
@@ -19,7 +19,7 @@ all:
             ip-10-0-4-4.ap-southeast-1.compute.internal:
     atlas_nodes:
       hosts:
-        ec2-47-128-80-190.ap-southeast-1.compute.amazonaws.com:
+        ip-10-0-4-162.ap-southeast-1.compute.internal:
     airflow_nodes:
       vars:
         airflow:

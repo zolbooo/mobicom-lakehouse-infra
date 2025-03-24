@@ -6,12 +6,6 @@
         name: cis-benchmark
     - include_role:
         name: install-docker
-    - name: Ensure docker service is running
-      become: true
-      service:
-        name: docker
-        state: started
-        enabled: yes
     - name: Install Git
       become: true
       package:
@@ -33,7 +27,10 @@
         mode: u+x
     - name: Download Atlas dependencies
       become: true
-      shell: ./atlas/dev-support/atlas-docker/download-archives.sh
+      shell: ./download-archives.sh
+      register: download_archives
+      args:
+        chdir: atlas/dev-support/atlas-docker/
     - name: Ensure .m2 directory exists
       become: true
       file:
@@ -45,7 +42,7 @@
       shell: docker compose -f docker-compose.atlas-base.yml -f docker-compose.atlas-build.yml up
       args:
         chdir: atlas/dev-support/atlas-docker/
-    - name: Run Atlas server
+    - name: Run Atlas
       become: true
       shell: docker compose -f docker-compose.atlas-base.yml -f docker-compose.atlas.yml -f docker-compose.atlas-hadoop.yml -f docker-compose.atlas-hbase.yml -f docker-compose.atlas-kafka.yml -f docker-compose.atlas-hive.yml up -d
       args:

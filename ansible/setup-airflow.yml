@@ -6,6 +6,13 @@
     - name: Set Spark primary node address
       set_fact:
         spark_main_node_address: "{{ ansible_facts[network_interface]['ipv4']['address'] }}"
+- name: Get Atlas node address
+  hosts: atlas_nodes
+  gather_facts: true
+  tasks:
+    - name: Set Atlas node address
+      set_fact:
+        atlas_node_address: "{{ ansible_facts[network_interface]['ipv4']['address'] }}"
 - name: Setup Airflow nodes
   hosts: airflow_nodes
   tasks:
@@ -21,6 +28,15 @@
         dest: /etc/hosts
         regexp: ".* spark.internal$"
         line: "{{ spark_main_node_address }} spark.internal"
+        state: present
+    - name: Add Atlas node to /etc/hosts
+      become: true
+      vars:
+        atlas_node_address: "{{ hostvars[groups['atlas_nodes'][0]]['atlas_node_address'] }}"
+      lineinfile:
+        dest: /etc/hosts
+        regexp: ".* atlas.internal$"
+        line: "{{ atlas_node_address }} atlas.internal"
         state: present
     - name: Install git
       become: true
