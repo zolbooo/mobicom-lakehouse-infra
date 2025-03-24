@@ -25,8 +25,8 @@
       vars:
         version: 0.9.1
       get_url:
-        url: https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/{{ version }}/linux-amd64/docker-credential-ecr-login
-        dest: /usr/local/bin/docker-credential-ecr-login
+        url: https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/{{ version }}/linux-{{ 'arm64' if ansible_facts.architecture == 'aarch64' else 'amd64' }}/docker-credential-ecr-login
+        dest: /usr/bin/docker-credential-ecr-login
         mode: "0755"
         checksum: sha256:c0054f2635b2f01b00f7bf6f88023ffe7fded15c533a85a493037607135eebac
     - name: Create directory for Docker configuration
@@ -59,6 +59,12 @@
         name: docker
         state: present
 - import_playbook: playbooks/setup-swarm-cluster.yaml
+- name: Pull Spark image
+  hosts: spark_nodes
+  tasks:
+    - name: Pull Spark image
+      become: true
+      command: docker pull 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
 - name: Setup Spark
   hosts: spark_main_node
   tasks:
