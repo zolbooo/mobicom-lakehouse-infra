@@ -1,0 +1,37 @@
+- name: Ensure user password
+  become: true
+  user:
+    name: "{{ ansible_user }}"
+    password: "{{ ansible_become_password | password_hash('sha512', lookup('community.general.random_string', length=16, special=false)) }}"
+- name: Set root user password
+  become: true
+  user:
+    name: root
+    password: "{{ root_password | password_hash('sha512', lookup('community.general.random_string', length=16, special=false)) }}"
+- name: Add user to wheel group
+  become: true
+  user:
+    name: "{{ ansible_user }}"
+    groups: wheel
+    append: true
+- name: Reconnect after changing user's group
+  meta: reset_connection
+- name: Allow only ec2-user to connect via SSH
+  become: true
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "AllowUsers {{ ansible_user }}"
+    state: present
+  notify:
+    - Restart sshd
+- name: Install OpenSCAP
+  become: true
+  package:
+    name:
+      - openscap-scanner
+      - scap-security-guide
+    state: present
+- name: Run OpenSCAP
+  become: true
+  command: oscap xccdf eval --remediate --profile xccdf_org.ssgproject.content_profile_cis --report cis-report.html /usr/share/xml/scap/ssg/content/ssg-rhel9-ds.xml
+  ignore_errors: true
