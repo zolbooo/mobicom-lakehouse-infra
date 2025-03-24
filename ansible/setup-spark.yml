@@ -56,15 +56,17 @@
       dnf:
         name: python3-pip
         state: present
-    - name: Install docker Python library
+    - name: Install Python dependencies
       become: true
       pip:
-        name: docker
+        name:
+          - docker
+          - jsondiff
         state: present
     - name: Pull Spark image
       become: true
       docker_image:
-        name: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
+        name: "{{ spark_image }}"
         source: pull
 - import_playbook: playbooks/setup-swarm-cluster.yaml
 - name: Setup Spark
@@ -72,6 +74,7 @@
   tasks:
     - name: Get primary node ID
       become: true
+      # See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
       command: !unsafe docker node ls -f role=manager --format {{.ID}}
       register: primary_node_id
     - name: Set primary node Spark role
@@ -82,7 +85,6 @@
           spark-role: master
     - name: Get worker node IDs
       become: true
-      # See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
       command: !unsafe docker node ls -f role=worker --format {{.ID}}
       register: worker_node_ids
     - name: Set worker node Spark role
@@ -100,9 +102,12 @@
         recurse: true
     - name: Copy Spark stack config
       become: true
-      copy:
-        src: spark-stack.yaml
-        dest: /opt/app/spark
+      template:
+        src: files/spark-stack.yml.j2
+        dest: /opt/app/spark/spark-stack.yml
     - name: Start Spark stack
       become: true
-      command: docker stack deploy -c /opt/app/spark/spark-stack.yaml spark
+      docker_stack:
+        state: present
+        name: spark
+        compose: [/opt/app/spark/spark-stack.yml]
