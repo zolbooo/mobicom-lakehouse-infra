@@ -1,0 +1,6 @@
+---
+- name: Ensure CIS benchmark compliance
+  hosts: cis_benchmark
+  tasks:
+    - include_role:
+        name: cis-benchmark

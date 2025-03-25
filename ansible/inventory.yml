@@ -6,6 +6,9 @@ all:
     root_password: "{{ lookup('password', '/dev/null', length=24, seed='mobicom-lakehouse.root.password') }}"
     network_interface: eth0
   children:
+    cis_benchmark:
+      hosts:
+        10.0.5.34:
     spark_nodes:
       vars:
         spark_image: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
