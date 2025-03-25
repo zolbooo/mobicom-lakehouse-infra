@@ -56,9 +56,17 @@
         name: "{{ spark_image }}"
         source: pull
 - import_playbook: playbooks/setup-swarm-cluster.yaml
-- name: Setup Spark
+- name: Setup Spark and Airflow
   hosts: spark_main_node
+  vars:
+    working_directory: /opt/mobicom
   tasks:
+    - name: Create overlay network
+      become: true
+      docker_network:
+        name: mobi-network
+        driver: overlay
+        attachable: true
     - name: Get primary node ID
       become: true
       # See: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_advanced_syntax.html#unsafe-or-raw-strings
@@ -81,20 +89,65 @@
         labels:
           spark-role: worker
       with_items: "{{ worker_node_ids.stdout_lines }}"
-    - name: Create directory for Spark configuration
+    - name: Check if lakehouse repository is cloned
+      stat:
+        path: "{{ working_directory }}"
+      register: lakehouse_repo
+      failed_when: false
+    - name: Clone lakehouse repository
       become: true
-      file:
-        path: /opt/app/spark
-        state: directory
-        recurse: true
-    - name: Copy Spark stack config
-      become: true
-      template:
-        src: files/spark-stack.yml.j2
-        dest: /opt/app/spark/spark-stack.yml
+      block:
+        - name: Prepare directory for project
+          file:
+            path: /opt
+            state: directory
+        - name: Copy deployment key
+          copy:
+            # See: https://github.com/ansible/ansible/issues/30829#issuecomment-334192427
+            content: "{{ lookup('file', 'files/deploy-key') + '\n' }}"
+            dest: /tmp/lakehouse-deployment-key
+            mode: 0600
+        - name: Ensure Git is installed
+          package:
+            name: git
+            state: present
+        - name: Clone repository
+          git:
+            repo: git@github.com:erdenebayrd/mobicom.git
+            key_file: /tmp/lakehouse-deployment-key
+            accept_hostkey: true
+            single_branch: true
+            dest: "{{ working_directory }}"
+        - name: Remove deployment key
+          shell: shred -u /tmp/lakehouse-deployment-key
+        - name: Ensure owner of repository files
+          file:
+            path: "{{ working_directory }}"
+            owner: "{{ ansible_user }}"
+            group: "{{ ansible_user }}"
+            mode: "0755"
+            recurse: true
+      when: not lakehouse_repo.stat.exists
     - name: Start Spark stack
       become: true
       docker_stack:
         state: present
         name: spark
-        compose: [/opt/app/spark/spark-stack.yml]
+        compose:
+          - "{{ working_directory }}/.docker/spark/stack.yaml"
+    - name: Configure dotenv file for Airflow
+      vars:
+        airflow_uid: "{{ ansible_user_uid }}"
+      template:
+        src: files/airflow.env.j2
+        dest: "{{ working_directory }}/.env"
+    - name: Set up Airflow logs directory
+      become: true
+      file:
+        path: "{{ working_directory }}/.docker/airflow/logs"
+        mode: "0777"
+        state: directory
+    - name: Start Airflow
+      become: true
+      community.docker.docker_compose_v2:
+        project_src: "{{ working_directory }}/.docker/airflow"
