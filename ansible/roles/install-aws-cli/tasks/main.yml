@@ -1,9 +1,9 @@
 ---
 - name: Check if AWS CLI is available
-  command: aws --version
+  stat:
+    path: /usr/local/aws-cli/v2/current
   register: aws_cli_check
   failed_when: false
-  changed_when: false
 - name: Proceed with AWS CLI installation
   block:
     - name: Ensure unzip is installed
@@ -18,5 +18,14 @@
         dest: /tmp/
     - name: Install AWS CLI
       become: true
-      command: /tmp/aws/install
-  when: aws_cli_check.rc != 0
+      command: /tmp/aws/install --update
+    # Hardened versions of Linux have stricter umask, so we need to ensure
+    # that the directory has execute permissions for all users
+    - name: Ensure execute permissions for AWS CLI
+      become: true
+      file:
+        path: /usr/local/aws-cli
+        state: directory
+        mode: "0755"
+        recurse: true
+  when: "'stat' not in aws_cli_check or not aws_cli_check.stat.exists"
