@@ -9,6 +9,7 @@ all:
     cis_benchmark:
       hosts:
         10.0.5.34:
+        10.0.5.28:
     spark_nodes:
       vars:
         spark_image: 122610515913.dkr.ecr.ap-southeast-1.amazonaws.com/yarn-spark:latest
