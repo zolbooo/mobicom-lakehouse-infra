@@ -5,6 +5,10 @@
     - include_role:
         name: cis-benchmark
     - include_role:
+        name: install-aws-cli
+    - include_role:
+        name: install-guardduty-agent
+    - include_role:
         name: install-docker
     - name: Install Git
       become: true
