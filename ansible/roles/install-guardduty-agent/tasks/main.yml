@@ -1,0 +1,11 @@
+---
+- name: Check if GuardDuty service is available
+  command: "systemctl status amazon-guardduty-agent"
+  register: guardduty_service_status
+  ignore_errors: true
+- name: Install GuardDuty agent
+  block:
+    - name: Install GuardDuty agent (RHEL)
+      import_tasks: rhel.yml
+      when: ansible_facts['os_family']|lower == 'redhat'
+  when: guardduty_service_status.rc != 0

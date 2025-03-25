@@ -1,0 +1,10 @@
+---
+- name: Download GuardDuty agent
+  vars:
+    version: "1.6.0"
+    arch: "{{ 'arm64' if ansible_facts.architecture == 'aarch64' else 'x86_64' }}"
+  command: "aws s3 cp s3://174946120834-ap-southeast-1-guardduty-agent-rpm-artifacts/{{ version }}/{{ arch }}/amazon-guardduty-agent-{{ version }}.{{ arch }}.rpm /tmp/amazon-guardduty-agent.rpm"
+- name: Install GuardDuty agent
+  become: true
+  command: rpm -ivh /tmp/amazon-guardduty-agent.rpm
+  notify: Restart GuardDuty agent

@@ -12,9 +12,11 @@
         fstype: ext4
         state: present
     - include_role:
-        name: install-docker
-    - include_role:
         name: install-aws-cli
+    - include_role:
+        name: install-guardduty-agent
+    - include_role:
+        name: install-docker
     - name: Install ECR credentials helper
       become: true
       vars:

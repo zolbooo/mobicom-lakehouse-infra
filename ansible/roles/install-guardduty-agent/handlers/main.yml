@@ -1,0 +1,5 @@
+- name: Restart GuardDuty agent
+  become: true
+  service:
+    name: amazon-guardduty-agent
+    state: restarted
