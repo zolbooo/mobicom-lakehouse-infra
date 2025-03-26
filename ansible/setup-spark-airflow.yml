@@ -145,13 +145,9 @@
       template:
         src: files/airflow.env.j2
         dest: "{{ working_directory }}/.env"
-    - name: Set up Airflow logs directory
-      become: true
-      file:
-        path: "{{ working_directory }}/.docker/airflow/logs"
-        mode: "0777"
-        state: directory
     - name: Start Airflow
       become: true
       community.docker.docker_compose_v2:
         project_src: "{{ working_directory }}/.docker/airflow"
+      environment:
+        AIRFLOW_UID: "{{ ansible_user_uid }}"
