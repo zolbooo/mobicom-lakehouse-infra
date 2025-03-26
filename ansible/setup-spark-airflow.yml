@@ -63,7 +63,7 @@
 - name: Setup Spark and Airflow
   hosts: spark_main_node
   vars:
-    working_directory: /opt/mobicom
+    working_directory: /opt/app/mobicom
   tasks:
     - name: Create overlay network
       become: true
@@ -140,8 +140,6 @@
         compose:
           - "{{ working_directory }}/.docker/spark/stack.yaml"
     - name: Configure dotenv file for Airflow
-      vars:
-        airflow_uid: "{{ ansible_user_uid }}"
       template:
         src: files/airflow.env.j2
         dest: "{{ working_directory }}/.env"
@@ -149,5 +147,14 @@
       become: true
       community.docker.docker_compose_v2:
         project_src: "{{ working_directory }}/.docker/airflow"
-      environment:
-        AIRFLOW_UID: "{{ ansible_user_uid }}"
+    - name: Ensure permissions for Airflow volumes
+      file:
+        path: "{{ working_directory }}/.docker/airflow/{{ item }}"
+        state: directory
+        mode: "0777"
+        recurse: true
+      with_items:
+        - dags
+        - logs
+        - config
+        - plugins
